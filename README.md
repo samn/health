@@ -23,7 +23,7 @@ var stream = health.NewStream()
 // In your main func, initiailze the stream with your sinks.
 func main() {
 	// Log to stdout! (can also use WriterSink to write to a log file, Syslog, etc)
-	stream.AddSink(&health.WriterSink{os.Stdout})
+	stream.AddSink(&health.WriterSink{os.Stdout, INFO})
 
 	// Log to StatsD!
 	statsdSink, err = health.NewStatsDSink("127.0.0.1:8125", "myapp")
@@ -64,7 +64,7 @@ import (
 var stream = health.NewStream()
 func main() {
 	// setup stream with sinks
-	stream.AddSink(&health.WriterSink{os.Stdout})
+	stream.AddSink(&health.WriterSink{os.Stdout, INFO})
 	http.HandleFunc("/users", getUsers)
 }
 
@@ -297,7 +297,7 @@ HEALTHD_MONITORED_HOSTPORTS=:5020 HEALTHD_SERVER_HOSTPORT=:5032 healthd
 
 Great! To get a sense of the type of data healthd serves, you can manually navigate to:
 
-* ```/jobs```: Lists top jobs 
+* ```/jobs```: Lists top jobs
 * ```/aggregations```: Provides a time series of aggregations
 * ```/aggregations/overall```: Squishes all time series aggregations into one aggregation.
 * ```/hosts```: Lists all monitored hosts and their statuses.

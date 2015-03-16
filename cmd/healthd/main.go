@@ -33,7 +33,7 @@ func main() {
 	// Setup our health stream.
 	// Log to stdout and a setup an polling sink
 	stream := health.NewStream()
-	stream.AddSink(&health.WriterSink{os.Stdout})
+	stream.AddSink(&health.WriterSink{os.Stdout, TRACE})
 	jsonPollingSink := health.NewJsonPollingSink(time.Minute, time.Minute*5)
 	jsonPollingSink.StartServer(healthHostPort)
 	stream.AddSink(jsonPollingSink)
