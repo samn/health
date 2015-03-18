@@ -184,14 +184,6 @@ func TestWriterSinkEmitEventErrKvsWithLogLevel(t *testing.T) {
 	assert.Equal(t, "another:thing level:info wat:ok", result[4])
 }
 
-func TestWriterSinkEmitEventErrKvsAndFilteredLogLevel(t *testing.T) {
-	var b bytes.Buffer
-	sink := WriterSink{&b, ERROR}
-	sink.EmitEventErr("myjob", "myevent", testErr, map[string]string{"wat": "ok", "another": "thing", "level": INFO.String()})
-
-	assert.Equal(t, 0, b.Len())
-}
-
 func TestWriterSinkEmitTimingBasic(t *testing.T) {
 	var b bytes.Buffer
 	sink := WriterSink{&b, TRACE}
@@ -294,16 +286,6 @@ func TestWriterSinkEmitCompleteKvsWithLogLevel(t *testing.T) {
 	}
 }
 
-func TestWriterSinkEmitCompleteKvsAndFilteredLogLevel(t *testing.T) {
-	for kind := range completionStatusToString {
-		var b bytes.Buffer
-		sink := WriterSink{&b, ERROR}
-		sink.EmitComplete("myjob", kind, 34567890, map[string]string{"wat": "ok", "another": "thing", "level": INFO.String()})
-
-		assert.Equal(t, 0, b.Len())
-	}
-}
-
 func TestWriterSinkShouldLogEventTrace(t *testing.T) {
 	var b bytes.Buffer
 	sink := WriterSink{&b, TRACE}
@@ -364,22 +346,38 @@ func TestWriterSinkShouldLogEventInfo(t *testing.T) {
 	assert.Equal(t, true, sink.shouldLogEvent(kvs))
 }
 
-func TestWriterSinkShouldLogEventError(t *testing.T) {
+func TestWriterSinkShouldLogEventCompletion(t *testing.T) {
 	var b bytes.Buffer
 	sink := WriterSink{&b, ERROR}
 
 	kvs := map[string]string{
 		"level": TRACE.String(),
 	}
-	assert.Equal(t, false, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Panic, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(ValidationError, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Junk, kvs))
+	assert.Equal(t, false, sink.shouldLogEventCompletion(Success, kvs))
 	kvs["level"] = DEBUG.String()
-	assert.Equal(t, false, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Panic, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(ValidationError, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Junk, kvs))
+	assert.Equal(t, false, sink.shouldLogEventCompletion(Success, kvs))
 	kvs["level"] = INFO.String()
-	assert.Equal(t, false, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Panic, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(ValidationError, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Junk, kvs))
+	assert.Equal(t, false, sink.shouldLogEventCompletion(Success, kvs))
 	kvs["level"] = ERROR.String()
-	assert.Equal(t, true, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Panic, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(ValidationError, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Junk, kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Success, kvs))
 	kvs["level"] = ""
-	assert.Equal(t, true, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
 	kvs["level"] = "wat"
-	assert.Equal(t, true, sink.shouldLogEvent(kvs))
+	assert.Equal(t, true, sink.shouldLogEventCompletion(Error, kvs))
 }

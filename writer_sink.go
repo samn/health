@@ -79,6 +79,14 @@ func (s *WriterSink) shouldLogEvent(kvs map[string]string) bool {
 	return true
 }
 
+func (s *WriterSink) shouldLogEventCompletion(status CompletionStatus, kvs map[string]string) bool {
+	if _, ok := kvs["level"]; ok {
+		return s.shouldLogEvent(kvs) || status != Success
+	} else {
+		return true
+	}
+}
+
 func (s *WriterSink) EmitEvent(job string, event string, kvs map[string]string) {
 	if !s.shouldLogEvent(kvs) {
 		return
@@ -97,10 +105,6 @@ func (s *WriterSink) EmitEvent(job string, event string, kvs map[string]string) 
 }
 
 func (s *WriterSink) EmitEventErr(job string, event string, inputErr error, kvs map[string]string) {
-	if !s.shouldLogEvent(kvs) {
-		return
-	}
-
 	var b bytes.Buffer
 	b.WriteRune('[')
 	b.WriteString(timestamp())
@@ -135,7 +139,7 @@ func (s *WriterSink) EmitTiming(job string, event string, nanos int64, kvs map[s
 }
 
 func (s *WriterSink) EmitComplete(job string, status CompletionStatus, nanos int64, kvs map[string]string) {
-	if !s.shouldLogEvent(kvs) {
+	if !s.shouldLogEventCompletion(status, kvs) {
 		return
 	}
 
